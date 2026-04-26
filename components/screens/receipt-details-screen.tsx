@@ -1,0 +1,236 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ArrowLeft,
+  Trash2,
+  Save,
+  Calendar,
+  Store,
+  DollarSign,
+  Tag,
+} from "lucide-react";
+import type { Receipt } from "@/lib/types";
+import { CATEGORIES } from "@/lib/types";
+
+interface ReceiptDetailsScreenProps {
+  receipt: Receipt;
+  onBack: () => void;
+  onSave: (receipt: Receipt) => void;
+  onDelete: (id: string) => void;
+  isNew?: boolean;
+}
+
+export function ReceiptDetailsScreen({
+  receipt,
+  onBack,
+  onSave,
+  onDelete,
+  isNew = false,
+}: ReceiptDetailsScreenProps) {
+  const [formData, setFormData] = useState({
+    storeName: receipt.storeName,
+    date: receipt.date,
+    total: receipt.total.toString(),
+    category: receipt.category,
+  });
+
+  const handleSave = () => {
+    onSave({
+      ...receipt,
+      storeName: formData.storeName,
+      date: formData.date,
+      total: parseFloat(formData.total) || 0,
+      category: formData.category,
+    });
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="sticky top-0 z-10 border-b border-border bg-background/80 px-5 pb-4 pt-6 backdrop-blur-lg lg:px-8">
+        <div className="mx-auto flex max-w-2xl items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 rounded-full"
+              onClick={onBack}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-xl font-bold text-foreground">
+              {isNew ? "New Receipt" : "Receipt Details"}
+            </h1>
+          </div>
+          <div className="hidden items-center gap-3 lg:flex">
+            {!isNew && (
+              <Button
+                variant="outline"
+                className="rounded-xl border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                onClick={() => onDelete(receipt.id)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            )}
+            <Button
+              className="rounded-xl bg-primary text-primary-foreground"
+              onClick={handleSave}
+            >
+              <Save className="mr-2 h-4 w-4" />
+              Save Receipt
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto w-full max-w-2xl flex-1 px-5 py-6 pb-32 lg:px-8 lg:pb-8">
+        <Card className="border-0 shadow-md">
+          <CardContent className="space-y-6 p-5 lg:p-6">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="space-y-2 lg:col-span-2">
+                <Label
+                  htmlFor="storeName"
+                  className="flex items-center gap-2 text-muted-foreground"
+                >
+                  <Store className="h-4 w-4" />
+                  Store Name
+                </Label>
+                <Input
+                  id="storeName"
+                  value={formData.storeName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, storeName: e.target.value })
+                  }
+                  className="h-12 rounded-xl border-input bg-secondary/50"
+                  placeholder="Enter store name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="date"
+                  className="flex items-center gap-2 text-muted-foreground"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Date
+                </Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) =>
+                    setFormData({ ...formData, date: e.target.value })
+                  }
+                  className="h-12 rounded-xl border-input bg-secondary/50"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="total"
+                  className="flex items-center gap-2 text-muted-foreground"
+                >
+                  <DollarSign className="h-4 w-4" />
+                  Total Amount
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    $
+                  </span>
+                  <Input
+                    id="total"
+                    type="number"
+                    step="0.01"
+                    value={formData.total}
+                    onChange={(e) =>
+                      setFormData({ ...formData, total: e.target.value })
+                    }
+                    className="h-12 rounded-xl border-input bg-secondary/50 pl-8"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2 lg:col-span-2">
+                <Label className="flex items-center gap-2 text-muted-foreground">
+                  <Tag className="h-4 w-4" />
+                  Category
+                </Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, category: value })
+                  }
+                >
+                  <SelectTrigger className="h-12 rounded-xl border-input bg-secondary/50">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {receipt.items && receipt.items.length > 0 && (
+              <div className="space-y-3">
+                <Label className="text-muted-foreground">Items</Label>
+                <div className="space-y-2 rounded-xl bg-secondary/30 p-4">
+                  {receipt.items.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <span className="text-foreground">{item.name}</span>
+                      <span className="text-muted-foreground">
+                        ${item.price.toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </main>
+
+      <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-background/80 px-5 py-4 backdrop-blur-lg lg:hidden">
+        <div className="flex gap-3">
+          {!isNew && (
+            <Button
+              variant="outline"
+              className="h-14 flex-1 rounded-2xl border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              onClick={() => onDelete(receipt.id)}
+            >
+              <Trash2 className="mr-2 h-5 w-5" />
+              Delete
+            </Button>
+          )}
+          <Button
+            className="h-14 flex-1 rounded-2xl bg-primary text-primary-foreground shadow-lg"
+            onClick={handleSave}
+          >
+            <Save className="mr-2 h-5 w-5" />
+            Save
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
