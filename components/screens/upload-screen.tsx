@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { X, Upload, FileText, Check, AlertCircle } from "lucide-react";
+import { uploadReceipt } from "@/lib/uploadReceipt";
+
+import { onAuthStateChanged, signInAnonymously } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 interface UploadScreenProps {
   onClose: () => void;
@@ -15,6 +19,30 @@ type UploadState = "idle" | "dragging" | "uploading" | "success" | "error";
 export function UploadScreen({ onClose, onUpload }: UploadScreenProps) {
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const [userReady, setUserReady] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        console.log("User Firebase:", user.uid);
+        setUserReady(true);
+        return;
+      }
+
+      try {
+        const result = await signInAnonymously(auth);
+        console.log("User anonim creat:", result.user.uid);
+        setUserReady(true);
+      } catch (error) {
+        console.error(error);
+        setErrorMessage("Nu s-a putut face autentificarea anonimă.");
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -49,18 +77,29 @@ export function UploadScreen({ onClose, onUpload }: UploadScreenProps) {
     [],
   );
 
-  const handleUpload = useCallback(() => {
+  const handleUpload = useCallback(async () => {
     if (!selectedFile) return;
 
-    setUploadState("uploading");
+    if (!userReady) {
+      setErrorMessage("Autentificarea încă se încarcă. Încearcă din nou.");
+      return;
+    }
 
-    setTimeout(() => {
+    setUploadState("uploading");
+    setErrorMessage(null);
+
+    try {
+      await uploadReceipt(selectedFile);
       setUploadState("success");
       setTimeout(() => {
         onUpload();
       }, 500);
-    }, 1500);
-  }, [selectedFile, onUpload]);
+    } catch (err) {
+      console.error(err);
+      setUploadState("error");
+      setErrorMessage(err instanceof Error ? err.message : "Eroare la upload.");
+    }
+  }, [selectedFile, userReady, onUpload]);
 
   const handleRemoveFile = useCallback(() => {
     setSelectedFile(null);
@@ -174,9 +213,10 @@ export function UploadScreen({ onClose, onUpload }: UploadScreenProps) {
               {uploadState === "idle" && (
                 <Button
                   onClick={handleUpload}
+                  disabled={!userReady}
                   className="w-full rounded-xl bg-accent py-6 text-accent-foreground hover:bg-accent/90"
                 >
-                  Process Receipt
+                  {userReady ? "Process Receipt" : "Preparing Firebase..."}
                 </Button>
               )}
 
@@ -187,7 +227,11 @@ export function UploadScreen({ onClose, onUpload }: UploadScreenProps) {
               )}
             </div>
           )}
-
+          {errorMessage && (
+            <p className="mt-4 text-center text-sm text-destructive">
+              {errorMessage}
+            </p>
+          )}
           <p className="mt-6 text-center text-xs text-muted-foreground">
             Your receipt will be automatically scanned and data extracted
           </p>
