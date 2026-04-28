@@ -15,7 +15,9 @@ import { mockReceipts, monthlyData } from "@/lib/mock-data";
 export default function ReceiptTrackerApp() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("onboarding");
   const [receipts, setReceipts] = useState<Receipt[]>(mockReceipts);
-  const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
+  const [selectedReceiptId, setSelectedReceiptId] = useState<string | null>(
+    null,
+  );
   const [isNewReceipt, setIsNewReceipt] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -43,25 +45,14 @@ export default function ReceiptTrackerApp() {
     setCurrentScreen("processing");
   }, []);
 
-  const handleUploadComplete = useCallback(() => {
-    setCurrentScreen("processing");
-  }, []);
-
-  const handleProcessingComplete = useCallback(() => {
-    const newReceipt: Receipt = {
-      id: Date.now().toString(),
-      storeName: "New Store",
-      date: new Date().toISOString().split("T")[0],
-      total: 0,
-      category: "Other",
-    };
-    setSelectedReceipt(newReceipt);
+  const handleUploadComplete = useCallback((receiptId: string) => {
+    setSelectedReceiptId(receiptId);
     setIsNewReceipt(true);
     setCurrentScreen("receipt-details");
   }, []);
 
   const handleViewReceipt = useCallback((receipt: Receipt) => {
-    setSelectedReceipt(receipt);
+    setSelectedReceiptId(receipt.id);
     setIsNewReceipt(false);
     setCurrentScreen("receipt-details");
   }, []);
@@ -76,7 +67,7 @@ export default function ReceiptTrackerApp() {
         );
       }
       setCurrentScreen("dashboard");
-      setSelectedReceipt(null);
+      setSelectedReceiptId(null);
     },
     [isNewReceipt],
   );
@@ -84,12 +75,12 @@ export default function ReceiptTrackerApp() {
   const handleDeleteReceipt = useCallback((id: string) => {
     setReceipts((prev) => prev.filter((r) => r.id !== id));
     setCurrentScreen("dashboard");
-    setSelectedReceipt(null);
+    setSelectedReceiptId(null);
   }, []);
 
   const handleBack = useCallback(() => {
     setCurrentScreen("dashboard");
-    setSelectedReceipt(null);
+    setSelectedReceiptId(null);
   }, []);
 
   switch (currentScreen) {
@@ -121,14 +112,15 @@ export default function ReceiptTrackerApp() {
       return <ProcessingScreen onComplete={handleProcessingComplete} />;
 
     case "receipt-details":
-      if (!selectedReceipt) return null;
+      if (!selectedReceiptId) return null;
       return (
         <ReceiptDetailsScreen
-          receipt={selectedReceipt}
+          receiptId={selectedReceiptId}
           onBack={handleBack}
-          onSave={handleSaveReceipt}
-          onDelete={handleDeleteReceipt}
-          isNew={isNewReceipt}
+          onDeleted={() => {
+            setCurrentScreen("dashboard");
+            setSelectedReceiptId(null);
+          }}
         />
       );
 

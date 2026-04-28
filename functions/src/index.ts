@@ -39,11 +39,15 @@ export const processReceipt = onObjectFinalized(
       console.log("Text detectat:", fullText.slice(0, 200));
 
       if (!fullText) {
-        await receiptRef.update({
-          status: "error",
-          errorMessage: "Nu s-a putut extrage text din imagine.",
-          updatedAt: FieldValue.serverTimestamp(),
-        });
+        await receiptRef.set(
+          {
+            status: "error",
+            errorMessage: "Nu s-a detectat text în imagine.",
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          {merge: true},
+        );
+
         return;
       }
 
@@ -52,7 +56,7 @@ export const processReceipt = onObjectFinalized(
       console.log("Parsare rezultat:", parsed);
 
       // ── 3. Actualizare Firestore ─────────────────────
-      await receiptRef.update({
+      await receiptRef.set({
         storeName: parsed.storeName,
         date: parsed.date,
         total: parsed.total,
@@ -66,11 +70,15 @@ export const processReceipt = onObjectFinalized(
     } catch (err) {
       console.error("Eroare la procesare:", err);
 
-      await receiptRef.update({
-        status: "error",
-        errorMessage: err instanceof Error ? err.message : "Eroare necunoscută",
-        updatedAt: FieldValue.serverTimestamp(),
-      });
+      await receiptRef.set(
+        {
+          status: "error",
+          errorMessage:
+            err instanceof Error ? err.message : "Eroare necunoscută",
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        {merge: true},
+      );
     }
   },
 );

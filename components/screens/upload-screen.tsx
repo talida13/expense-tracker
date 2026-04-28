@@ -11,7 +11,7 @@ import { auth } from "@/lib/firebase";
 
 interface UploadScreenProps {
   onClose: () => void;
-  onUpload: () => void;
+  onUpload: (receiptId: string) => void;
 }
 
 type UploadState = "idle" | "dragging" | "uploading" | "success" | "error";
@@ -89,17 +89,19 @@ export function UploadScreen({ onClose, onUpload }: UploadScreenProps) {
     setErrorMessage(null);
 
     try {
-      await uploadReceipt(selectedFile);
+      const id = await uploadReceipt(selectedFile);
+
       setUploadState("success");
+
       setTimeout(() => {
-        onUpload();
+        onUpload(id);
       }, 500);
     } catch (err) {
-      console.error(err);
+      console.error("Upload error:", err);
       setUploadState("error");
-      setErrorMessage(err instanceof Error ? err.message : "Eroare la upload.");
+      setErrorMessage("Nu s-a putut încărca bonul.");
     }
-  }, [selectedFile, userReady, onUpload]);
+}, [selectedFile, userReady, onUpload]);
 
   const handleRemoveFile = useCallback(() => {
     setSelectedFile(null);

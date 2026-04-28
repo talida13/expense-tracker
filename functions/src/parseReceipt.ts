@@ -2,8 +2,9 @@ export interface ParsedReceipt {
   storeName: string;
   date: string | null;
   total: number | null;
-  products: { name: string; price: number }[];
+  products: {name: string; price: number}[];
 }
+
 /**
  * Parsează textul OCR extras din bon.
  *
@@ -16,49 +17,58 @@ export function parseReceipt(text: string): ParsedReceipt {
     .map((l) => l.trim())
     .filter(Boolean);
 
-  // ── TOTAL ──────────────────────────────────────────────
-  // Caută linii cu TOTAL, SUMA, DE PLATA, etc.
+  const fullText = lines.join(" ");
+
   let total: number | null = null;
-  const totalRegex =
-    /(?:TOTAL|SUMA|DE PLAT[AĂ]|ACHITAT)\s*:?\s*(\d+[.,]\d{2})/i;
-  for (const line of lines) {
-    const match = line.match(totalRegex);
-    if (match) {
-      total = parseFloat(match[1].replace(",", "."));
-      break;
-    }
+  const totalRegex = /(?:^|\s)TOTAL\s*:?\s*(\d+[.,]\d{2})(?=\s|$)/i;
+
+  const totalMatch = fullText.match(totalRegex);
+  if (totalMatch) {
+    total = parseFloat(totalMatch[1].replace(",", "."));
   }
 
-  // ── DATĂ ───────────────────────────────────────────────
-  // Format DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY
   let date: string | null = null;
   const dateRegex = /(\d{2})[/.-](\d{2})[/.-](\d{4})/;
-  for (const line of lines) {
-    const match = line.match(dateRegex);
-    if (match) {
-      date = `${match[3]}-${match[2]}-${match[1]}`; // ISO: YYYY-MM-DD
-      break;
+
+  const dateMatch = fullText.match(dateRegex);
+  if (dateMatch) {
+    date = `${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`;
+  }
+
+  let storeName = "Necunoscut";
+  const companyRegex = /S\.C\.\s+(.+?)\s+S\.R\.L\./i;
+  const companyMatch = fullText.match(companyRegex);
+
+  if (companyMatch) {
+    storeName = companyMatch[1].trim();
+  } else {
+    for (const line of lines) {
+      if (/^[a-zA-ZăâîșțĂÂÎȘȚ\s]{3,}$/.test(line)) {
+        storeName = line;
+        break;
+      }
     }
   }
 
-  // ── MAGAZIN ────────────────────────────────────────────
-  // Prima linie non-goală e de obicei numele magazinului
-  const storeName = lines[0] ?? "Necunoscut";
-
-  // ── PRODUSE ────────────────────────────────────────────
-  // Linii de forma: "Nume produs    9.99" sau "Nume produs    9,99"
   const products: { name: string; price: number }[] = [];
-  const productRegex = /^(.{3,}?)\s{2,}(\d+[.,]\d{2})\s*$/;
-  const skipRegex = /TOTAL|SUMA|TVA|PLAT|BON|CASA|DATA|NR\.|CF|CUI/i;
 
-  for (const line of lines.slice(1)) {
-    if (skipRegex.test(line)) continue;
-    const match = line.match(productRegex);
-    if (match) {
-      products.push({
-        name: match[1].trim(),
-        price: parseFloat(match[2].replace(",", ".")),
-      });
+  const productPattern =
+    "(?:^|\\s)" +
+    "\\d+[.,]\\d{3}\\s*x\\s*" +
+    "(?:COL)?\\d+[.,]\\d{2}\\s+" +
+    "(.+?)\\s+" +
+    "(\\d+[.,]\\d{2})\\s+[ABab](?=\\s|$)";
+
+  const productRegex = new RegExp(productPattern, "g");
+  let productMatch;
+
+  while ((productMatch = productRegex.exec(fullText)) !== null) {
+    const name = productMatch[1].replace(/\s+[ABab]$/, "").trim();
+
+    const price = parseFloat(productMatch[2].replace(",", "."));
+
+    if (name.length >= 3 && price > 0) {
+      products.push({name, price});
     }
   }
 
