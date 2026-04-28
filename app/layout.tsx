@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { DM_Sans, Playfair_Display } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+import { SettingsProvider } from "@/lib/SettingsContext";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -38,7 +39,9 @@ export default function RootLayout({
       <body
         className={`${dmSans.variable} ${playfair.variable} font-sans antialiased`}
       >
-        {children}
+        <SettingsProvider>
+          {children}
+        </SettingsProvider>
         {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>

@@ -23,28 +23,36 @@ import {
   Loader2,
   AlertCircle,
   Package,
+  Plus,
+  X,
+  Edit,
 } from "lucide-react";
 import { doc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useReceipt } from "@/lib/useReceipt";
 import { CATEGORIES } from "@/lib/types";
+import { useAppSettings } from "@/lib/SettingsContext";
+import { formatCurrency } from "@/lib/utils";
 
 interface ReceiptDetailsScreenProps {
   receiptId: string;        // primești ID-ul, nu obiectul
   onBack: () => void;
   onDeleted: () => void;
+  onSaved?: () => void;
 }
 
 export function ReceiptDetailsScreen({
   receiptId,
   onBack,
   onDeleted,
+  onSaved,
 }: ReceiptDetailsScreenProps) {
   const normalizedReceiptId = receiptId.startsWith("receipt_")
     ? receiptId
     : `receipt_${receiptId}`;
 
   const { receipt, loading } = useReceipt(normalizedReceiptId);
+  const { settings, rates } = useAppSettings();
   console.log("DETAILS receiptId prop:", receiptId);
   console.log("DETAILS loading:", loading);
   console.log("DETAILS receipt:", receipt);
@@ -55,8 +63,14 @@ export function ReceiptDetailsScreen({
     total: "",
     category: "",
   });
+  const [products, setProducts] = useState<{ name: string; price: number }[]>([]);
+  const [newProductName, setNewProductName] = useState("");
+  const [newProductPrice, setNewProductPrice] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editPrice, setEditPrice] = useState("");
 
   // Populează form când vin datele din Firestore
 useEffect(() => {
@@ -65,13 +79,19 @@ useEffect(() => {
   setFormData({
     storeName: receipt.storeName ?? "",
     date: receipt.date ?? "",
-    total:
-      receipt.total !== null && receipt.total !== undefined
-        ? String(receipt.total)
-        : "",
+    total: receipt.total !== null && receipt.total !== undefined ? String(receipt.total) : "",
     category: receipt.category ?? "",
   });
+  setProducts(receipt.products ?? []);
 }, [receipt]);
+
+  // Recalculează total când se schimbă produsele
+  useEffect(() => {
+    const totalFromProducts = products.reduce((sum, item) => sum + item.price, 0);
+    if (totalFromProducts > 0) {
+      setFormData(prev => ({ ...prev, total: totalFromProducts.toFixed(2) }));
+    }
+  }, [products]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -81,10 +101,15 @@ useEffect(() => {
         date: formData.date,
         total: parseFloat(formData.total) || 0,
         category: formData.category,
+        products: products,
+        status: "done",
         updatedAt: serverTimestamp(),
       });
       setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      setTimeout(() => {
+        setSaved(false);
+        onSaved?.();
+      }, 2000);
     } catch (err) {
       console.error("Eroare la save:", err);
     } finally {
@@ -203,7 +228,7 @@ useEffect(() => {
 
               <div className="space-y-2">
                 <Label htmlFor="total" className="flex items-center gap-2 text-muted-foreground">
-                  <DollarSign className="h-4 w-4" /> Total Amount
+                  <DollarSign className="h-4 w-4" /> Total Amount (RON)
                 </Label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -219,6 +244,11 @@ useEffect(() => {
                     placeholder="0.00"
                   />
                 </div>
+                {settings.currency !== 'RON' && (
+                  <p className="text-xs text-muted-foreground">
+                    Estimated in your currency: {(parseFloat(formData.total) / (rates[settings.currency] || 1)).toFixed(2)} {settings.currency}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2 lg:col-span-2">
@@ -242,23 +272,149 @@ useEffect(() => {
             </div>
 
             {/* Produse extrase de OCR */}
-            {receipt?.products && receipt.products.length > 0 && (
-              <div className="space-y-3">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
                 <Label className="flex items-center gap-2 text-muted-foreground">
                   <Package className="h-4 w-4" /> Extracted Items
                 </Label>
-                <div className="space-y-2 rounded-xl bg-secondary/30 p-4">
-                  {receipt.products.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm">
-                      <span className="text-foreground">{item.name}</span>
-                      <span className="font-medium text-foreground">
-                        {item.price.toFixed(2)} Lei
-                      </span>
-                    </div>
-                  ))}
+                {/* {receipt?.imageUrl && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-6 px-2"
+                    onClick={() => {
+                      // 44afl
+                      alert("Re-detection not implemented yet");
+                    }}
+                  >
+                    Re-detect
+                  </Button>
+                )} */}
+              </div>
+              <div className="space-y-2 rounded-xl bg-secondary/30 p-4">
+                {products.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between text-sm">
+                    {editingIndex === index ? (
+                      <>
+                        <Input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="flex-1 h-8 text-sm mr-2"
+                          placeholder="Product name"
+                        />
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={editPrice}
+                          onChange={(e) => setEditPrice(e.target.value)}
+                          className="w-20 h-8 text-sm mr-2"
+                          placeholder="Price"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-green-600 hover:text-green-700"
+                          onClick={() => {
+                            if (editName.trim() && editPrice) {
+                              const updatedProducts = [...products];
+                              updatedProducts[index] = {
+                                name: editName.trim(),
+                                price: parseFloat(editPrice)
+                              };
+                              setProducts(updatedProducts);
+                              setEditingIndex(null);
+                              setEditName("");
+                              setEditPrice("");
+                            }
+                          }}
+                        >
+                          <Save className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-muted-foreground/70"
+                          onClick={() => {
+                            setEditingIndex(null);
+                            setEditName("");
+                            setEditPrice("");
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-foreground">{item.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-foreground">
+                            {item.price.toFixed(2)} Lei
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-muted-foreground hover:text-blue-600"
+                            onClick={() => {
+                              setEditingIndex(index);
+                              setEditName(item.name);
+                              setEditPrice(item.price.toString());
+                            }}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                            onClick={() => setProducts(products.filter((_, i) => i !== index))}
+                            disabled={products.length === 1}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+                {/* Add new product */}
+                <div className="flex gap-2 pt-2 border-t border-border/50">
+                  <Input
+                    placeholder="Product name"
+                    value={newProductName}
+                    onChange={(e) => setNewProductName(e.target.value)}
+                    className="flex-1 h-8 text-sm"
+                  />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="Price"
+                    value={newProductPrice}
+                    onChange={(e) => setNewProductPrice(e.target.value)}
+                    className="w-20 h-8 text-sm"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-2"
+                    onClick={() => {
+                      if (newProductName.trim() && newProductPrice) {
+                        setProducts([...products, { name: newProductName.trim(), price: parseFloat(newProductPrice) }]);
+                        setNewProductName("");
+                        setNewProductPrice("");
+                      }
+                    }}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Preview imagine bon */}
             {receipt?.imageUrl && (
