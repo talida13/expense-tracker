@@ -20,7 +20,9 @@ export function parseReceipt(text: string): ParsedReceipt {
   const fullText = lines.join(" ");
 
   let total: number | null = null;
-  const totalRegex = /(?:^|\s)TOTAL\s*:?\s*(\d+[.,]\d{2})(?=\s|$)/i;
+
+  const totalRegex =
+        /(?:^|\s)TOTAL(?!\s*TVA)(?:\s+(?:LEI|RON))?[^\d]{0,15}(\d+[.,]\d{2})/i;
 
   const totalMatch = fullText.match(totalRegex);
   if (totalMatch) {
