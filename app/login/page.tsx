@@ -56,7 +56,7 @@ export default function LoginPage() {
           <div className="rounded-lg bg-blue-50 p-4 border border-blue-200">
             <h3 className="font-semibold text-blue-900 mb-2">Why sign in?</h3>
             <ul className="text-sm text-blue-800 space-y-1">
-              <li>✓ Save your recipes</li>
+              <li>✓ Save your receipts</li>
               <li>✓ Create collections</li>
               <li>✓ Share with friends</li>
             </ul>
