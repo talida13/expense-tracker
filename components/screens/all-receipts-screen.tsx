@@ -72,8 +72,17 @@ export function AllReceiptsScreen({
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
 
+  const parseISODate = (dateString: string): Date => {
+    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateString.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    }
+    return new Date(dateString);
+  };
+
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = parseISODate(dateString);
+    if (isNaN(date.getTime())) return dateString;
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -82,7 +91,8 @@ export function AllReceiptsScreen({
   };
 
   const formatShortDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = parseISODate(dateString);
+    if (isNaN(date.getTime())) return dateString;
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
@@ -249,7 +259,11 @@ export function AllReceiptsScreen({
                           {receipt.storeName}
                         </h4>
                         <p className="font-serif text-2xl font-bold tracking-tight text-foreground">
-                          {formatCurrency(receipt.total, settings.currency, rates)}
+                          {formatCurrency(
+                            receipt.total,
+                            settings.currency,
+                            rates,
+                          )}
                         </p>
                       </div>
 
@@ -280,7 +294,11 @@ export function AllReceiptsScreen({
                                   {item.name}
                                 </span>
                                 <span className="ml-2 text-muted-foreground">
-                                  {formatCurrency(item.price, settings.currency, rates)}
+                                  {formatCurrency(
+                                    item.price,
+                                    settings.currency,
+                                    rates,
+                                  )}
                                 </span>
                               </div>
                             ))}
@@ -332,7 +350,11 @@ export function AllReceiptsScreen({
                       </div>
                       <div className="text-right">
                         <p className="font-serif font-semibold text-foreground">
-                          {formatCurrency(receipt.total, settings.currency, rates)}
+                          {formatCurrency(
+                            receipt.total,
+                            settings.currency,
+                            rates,
+                          )}
                         </p>
                         {receipt.items && receipt.items.length > 0 && (
                           <p className="text-xs text-muted-foreground">

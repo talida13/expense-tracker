@@ -61,12 +61,22 @@ export default function ReceiptTrackerApp() {
     const monthMap: { [key: string]: number } = {};
     receipts.forEach((r) => {
       if (r.date) {
-        const date = new Date(r.date);
-        const month = date.toLocaleString("default", {
-          month: "short",
-          year: "numeric",
-        });
-        monthMap[month] = (monthMap[month] || 0) + r.total;
+        let date: Date;
+
+        if (r.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const [year, month, day] = r.date.split("-").map(Number);
+          date = new Date(year, month - 1, day);
+        } else {
+          date = new Date(r.date);
+        }
+
+        if (!isNaN(date.getTime())) {
+          const month = date.toLocaleString("default", {
+            month: "short",
+            year: "numeric",
+          });
+          monthMap[month] = (monthMap[month] || 0) + r.total;
+        }
       }
     });
     return Object.entries(monthMap).map(([month, amount]) => ({
