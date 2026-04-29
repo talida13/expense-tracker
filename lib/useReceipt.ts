@@ -3,6 +3,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "./firebase";
 
 export interface ReceiptData {
+  userId: string;
   receiptId: string;
   storeName: string | null;
   date: string | null;

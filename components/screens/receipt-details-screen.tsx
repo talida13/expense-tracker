@@ -59,6 +59,8 @@ export function ReceiptDetailsScreen({
 
   const [formData, setFormData] = useState({
     storeName: "",
+    userId: "",
+    products: [],
     date: "",
     total: "",
     category: "",
@@ -78,7 +80,9 @@ useEffect(() => {
 
   setFormData({
     storeName: receipt.storeName ?? "",
+    userId: receipt.userId ?? "",
     date: receipt.date ?? "",
+    products: receipt.products ?? [],
     total: receipt.total !== null && receipt.total !== undefined ? String(receipt.total) : "",
     category: receipt.category ?? "",
   });

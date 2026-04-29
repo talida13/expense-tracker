@@ -64,7 +64,9 @@ export const processReceipt = onObjectFinalized(
         rawText: fullText, // util pentru debugging
         status: "done",
         updatedAt: FieldValue.serverTimestamp(),
-      });
+      },
+      {merge: true},
+      );
 
       console.log("Bon procesat cu succes:", receiptId);
     } catch (err) {
