@@ -29,7 +29,7 @@ export function ScanScreen({ onClose, onCapture }: ScanScreenProps) {
       </header>
 
       <div className="relative flex flex-1 items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-b from-foreground/90 to-foreground" />
+        <div className="absolute inset-0 bg-linear-to-b from-foreground/90 to-foreground" />
 
         <div className="relative z-10 flex flex-col items-center">
           <div className="relative h-80 w-64 rounded-2xl border-2 border-dashed border-background/50">
@@ -52,7 +52,7 @@ export function ScanScreen({ onClose, onCapture }: ScanScreenProps) {
         </div>
       </div>
 
-      <div className="relative z-10 bg-gradient-to-t from-foreground via-foreground to-transparent pb-10 pt-6">
+      <div className="relative z-10 bg-linear-to-t from-foreground via-foreground to-transparent pb-10 pt-6">
         <div className="flex items-center justify-center gap-8">
           <Button
             variant="ghost"
@@ -72,7 +72,6 @@ export function ScanScreen({ onClose, onCapture }: ScanScreenProps) {
             <span className="sr-only">Capture receipt</span>
           </button>
 
-          {/* Spacer for symmetry */}
           <div className="h-14 w-14" />
         </div>
       </div>

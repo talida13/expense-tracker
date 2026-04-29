@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { OnboardingScreen } from "@/components/screens/onboarding-screen";
+import { useAuth } from "@/hooks/useAuth";
 import { DashboardScreen } from "@/components/screens/dashboard-screen";
 import { ScanScreen } from "@/components/screens/scan-screen";
 import { UploadScreen } from "@/components/screens/upload-screen";
@@ -13,7 +13,7 @@ import type { Screen, Receipt } from "@/lib/types";
 import { mockReceipts, monthlyData } from "@/lib/mock-data";
 
 export default function ReceiptTrackerApp() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>("onboarding");
+  const [currentScreen, setCurrentScreen] = useState<Screen>("dashboard");
   const [receipts, setReceipts] = useState<Receipt[]>(mockReceipts);
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [isNewReceipt, setIsNewReceipt] = useState(false);
@@ -26,10 +26,6 @@ export default function ReceiptTrackerApp() {
       document.documentElement.classList.remove("dark");
     }
   }, [isDarkMode]);
-
-  const handleGetStarted = useCallback(() => {
-    setCurrentScreen("dashboard");
-  }, []);
 
   const handleScanReceipt = useCallback(() => {
     setCurrentScreen("scan");
@@ -93,9 +89,6 @@ export default function ReceiptTrackerApp() {
   }, []);
 
   switch (currentScreen) {
-    case "onboarding":
-      return <OnboardingScreen onGetStarted={handleGetStarted} />;
-
     case "dashboard":
       return (
         <DashboardScreen

@@ -1,24 +1,23 @@
-"use client";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Receipt,
-  TrendingUp,
-  Camera,
-  ChevronRight,
-  Settings,
-  FileText,
-  Upload,
-  Plus,
-} from "lucide-react";
-import type { Receipt as ReceiptType } from "@/lib/types";
-import { Bar, BarChart, XAxis, YAxis, Tooltip, Cell } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import type { Receipt as ReceiptType } from "@/lib/types";
+import { getAuth } from "firebase/auth";
+import {
+  Camera,
+  ChevronRight,
+  FileText,
+  Plus,
+  Receipt,
+  Settings,
+  TrendingUp,
+  Upload,
+} from "lucide-react";
+import { Bar, BarChart, XAxis, YAxis } from "recharts";
 
 interface DashboardScreenProps {
   receipts: ReceiptType[];
@@ -67,13 +66,19 @@ export function DashboardScreen({
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
+  const auth = getAuth();
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 border-b border-border/50 bg-background/95 px-5 pb-4 pt-6 backdrop-blur-xl lg:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div>
             <p className="text-sm font-medium tracking-wide text-muted-foreground">
-              Good morning
+              Good morning,{" "}
+              {auth.currentUser?.displayName ||
+                auth.currentUser?.email ||
+                "User"}
+              !
             </p>
             <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground lg:text-3xl">
               Dashboard
