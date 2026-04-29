@@ -1,6 +1,8 @@
-import type { Metadata, Viewport } from "next";
-import { DM_Sans, Playfair_Display } from "next/font/google";
+import { AuthProvider } from "@/context/AuthProvider";
+import { LayoutContent } from "@/components/LayoutContent";
 import { Analytics } from "@vercel/analytics/next";
+import type { Viewport } from "next";
+import { DM_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { SettingsProvider } from "@/lib/SettingsContext";
 
@@ -15,11 +17,6 @@ const playfair = Playfair_Display({
   variable: "--font-playfair",
   weight: ["500", "600", "700"],
 });
-
-export const metadata: Metadata = {
-  title: "Receipt Uploader",
-  description: "Track your expenses effortlessly by scanning receipts",
-};
 
 export const viewport: Viewport = {
   themeColor: "#1a2744",
@@ -40,9 +37,11 @@ export default function RootLayout({
         className={`${dmSans.variable} ${playfair.variable} font-sans antialiased`}
       >
         <SettingsProvider>
-          {children}
+          <AuthProvider>
+            <LayoutContent>{children}</LayoutContent>
+            {process.env.NODE_ENV === "production" && <Analytics />}
+          </AuthProvider>
         </SettingsProvider>
-        {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>
   );

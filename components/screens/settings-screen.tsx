@@ -20,11 +20,12 @@ import {
   Bell,
   Shield,
   HelpCircle,
-  LogOut,
   ChevronRight,
 } from "lucide-react";
 import { useSettings } from "@/lib/useSettings";
 import { useAppSettings } from "@/lib/SettingsContext";
+import { LogoutButton } from "../LogoutButton";
+import { getAuth } from "firebase/auth";
 
 interface SettingsScreenProps {
   onBack: () => void;
@@ -49,6 +50,7 @@ export function SettingsScreen({
     value,
     label: `${value} (${symbol}) - 1 ${value} = ${rate.toFixed(2)} RON (BNR Rate)`,
   }));
+  const auth = getAuth();
 
   const settingsSections = [
     {
@@ -131,10 +133,10 @@ export function SettingsScreen({
             </div>
             <div className="flex-1">
               <p className="font-serif text-lg font-semibold text-primary-foreground">
-                John Doe
+                {auth.currentUser?.displayName || "John Doe"}
               </p>
               <p className="text-sm font-medium text-primary-foreground/70">
-                john.doe@email.com
+                {auth.currentUser?.email || "john.doe@email.com"}
               </p>
             </div>
             <ChevronRight className="h-5 w-5 text-primary-foreground/50" />
@@ -206,14 +208,7 @@ export function SettingsScreen({
             </Card>
           </div>
         ))}
-
-        <Button
-          variant="outline"
-          className="h-14 w-full rounded-2xl border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-        >
-          <LogOut className="mr-2 h-5 w-5" />
-          Logout
-        </Button>
+        <LogoutButton />
       </main>
     </div>
   );

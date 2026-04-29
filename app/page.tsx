@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { OnboardingScreen } from "@/components/screens/onboarding-screen";
+import { useAuth } from "@/hooks/useAuth";
 import { DashboardScreen } from "@/components/screens/dashboard-screen";
 import { ScanScreen } from "@/components/screens/scan-screen";
 import { UploadScreen } from "@/components/screens/upload-screen";
@@ -15,7 +15,7 @@ import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
 export default function ReceiptTrackerApp() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>("onboarding");
+  const [currentScreen, setCurrentScreen] = useState<Screen>("dashboard");
   const [selectedReceiptId, setSelectedReceiptId] = useState<string | null>(
     null,
   );
@@ -41,27 +41,37 @@ export default function ReceiptTrackerApp() {
 
   const receipts = useMemo(() => {
     return firebaseReceipts
-      .filter(r => r.status === "done" && r.total !== null && r.date !== null)
-      .map(r => ({
+      .filter((r) => r.status === "done" && r.total !== null && r.date !== null)
+      .map((r) => ({
         id: r.receiptId,
         storeName: r.storeName || "Unknown",
         date: r.date || "",
         total: r.total || 0,
         category: r.category || "Other",
-        items: r.products.map(p => ({ name: p.name, price: p.price, quantity: 1 })),
+        items: r.products.map((p) => ({
+          name: p.name,
+          price: p.price,
+          quantity: 1,
+        })),
       }));
   }, [firebaseReceipts]);
 
   const monthlyData = useMemo(() => {
     const monthMap: { [key: string]: number } = {};
-    receipts.forEach(r => {
+    receipts.forEach((r) => {
       if (r.date) {
         const date = new Date(r.date);
-        const month = date.toLocaleString('default', { month: 'short', year: 'numeric' });
+        const month = date.toLocaleString("default", {
+          month: "short",
+          year: "numeric",
+        });
         monthMap[month] = (monthMap[month] || 0) + r.total;
       }
     });
-    return Object.entries(monthMap).map(([month, amount]) => ({ month, amount }));
+    return Object.entries(monthMap).map(([month, amount]) => ({
+      month,
+      amount,
+    }));
   }, [receipts]);
 
   useEffect(() => {
@@ -71,10 +81,6 @@ export default function ReceiptTrackerApp() {
       document.documentElement.classList.remove("dark");
     }
   }, [isDarkMode]);
-
-  const handleGetStarted = useCallback(() => {
-    setCurrentScreen("dashboard");
-  }, []);
 
   const handleScanReceipt = useCallback(() => {
     setCurrentScreen("scan");
@@ -104,14 +110,11 @@ export default function ReceiptTrackerApp() {
     setCurrentScreen("dashboard");
   }, []);
 
-  const handleSaveReceipt = useCallback(
-    (updatedReceipt: Receipt) => {
-      // Since we use Firebase, the data updates automatically
-      setCurrentScreen("dashboard");
-      setSelectedReceiptId(null);
-    },
-    [],
-  );
+  const handleSaveReceipt = useCallback((updatedReceipt: Receipt) => {
+    // Since we use Firebase, the data updates automatically
+    setCurrentScreen("dashboard");
+    setSelectedReceiptId(null);
+  }, []);
 
   const handleDeleteReceipt = useCallback((id: string) => {
     // Since we use Firebase, the data updates automatically
@@ -125,9 +128,6 @@ export default function ReceiptTrackerApp() {
   }, []);
 
   switch (currentScreen) {
-    case "onboarding":
-      return <OnboardingScreen onGetStarted={handleGetStarted} />;
-
     case "dashboard":
       return (
         <DashboardScreen
