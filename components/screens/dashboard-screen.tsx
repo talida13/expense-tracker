@@ -52,8 +52,17 @@ export function DashboardScreen({
   const recentReceipts = receipts.slice(0, 4);
   const avgPerReceipt = receipts.length > 0 ? totalSpent / receipts.length : 0;
 
+  const parseISODate = (dateString: string): Date => {
+    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateString.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    }
+    return new Date(dateString);
+  };
+
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = parseISODate(dateString);
+    if (isNaN(date.getTime())) return dateString;
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
@@ -77,7 +86,7 @@ export function DashboardScreen({
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div>
             <p className="text-sm font-medium tracking-wide text-muted-foreground">
-              Good morning,{" "}
+              Hello,{" "}
               {auth.currentUser?.displayName ||
                 auth.currentUser?.email ||
                 "User"}
@@ -90,7 +99,7 @@ export function DashboardScreen({
           <div className="flex items-center gap-3">
             <Button
               onClick={onUploadReceipt}
-              className="hidden h-10 gap-2 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 md:flex"
+              className="hidden h-10 gap-2 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 md:flex cursor-pointer"
             >
               <Upload className="h-4 w-4" />
               Upload Receipt
