@@ -148,12 +148,12 @@ export function SettingsScreen({
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {section.title}
             </h2>
-            <Card className="border border-border/50 bg-card shadow-sm">
+            <Card className="border border-border/50 bg-card shadow-sm py-0">
               <CardContent className="divide-y divide-border p-0">
                 {section.items.map((item, index) => (
                   <div
                     key={item.label}
-                    className={`flex items-center gap-4 p-4 ${
+                    className={`flex items-center gap-4 p-6 ${
                       item.type === "link"
                         ? "cursor-pointer hover:bg-secondary/50"
                         : ""

@@ -54,7 +54,7 @@ export const LogoutButton: React.FC<LogoutButtonProps> = ({
             hover:bg-red-100 hover:border-red-300
             active:bg-red-200
             disabled:opacity-60 disabled:cursor-not-allowed
-            focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 h-14 bg-destructive text-foreground-destructive
+            focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 h-14 bg-destructive text-foreground-destructive dark:hover:bg-red-700/70
             ${className}
         `}
       >

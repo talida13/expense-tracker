@@ -40,8 +40,9 @@ export default function ReceiptTrackerApp() {
   }, []);
 
   const receipts = useMemo(() => {
+    console.log("Raw firebaseReceipts:", firebaseReceipts);
     return firebaseReceipts
-      .filter((r) => r.status === "done" && r.total !== null && r.date !== null)
+      .filter((r) => r.status === "done" && r.date !== null)
       .map((r) => ({
         id: r.receiptId,
         storeName: r.storeName || "Unknown",

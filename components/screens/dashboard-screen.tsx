@@ -98,7 +98,7 @@ export function DashboardScreen({
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 rounded-full"
+              className="h-10 w-10 rounded-full cursor-pointer"
               onClick={onOpenSettings}
             >
               <Settings className="h-5 w-5 text-muted-foreground" />
@@ -130,8 +130,8 @@ export function DashboardScreen({
               <Card className="border border-border/50 bg-card shadow-sm">
                 <CardContent className="p-5">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/15">
-                      <Receipt className="h-4 w-4 text-accent" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary">
+                      <Receipt className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
                   <p className="mt-4 text-sm font-medium text-muted-foreground">
@@ -265,7 +265,7 @@ export function DashboardScreen({
                 </CardTitle>
                 <Button
                   variant="ghost"
-                  className="h-auto p-0 text-sm text-accent hover:bg-transparent hover:text-accent/80"
+                  className="h-auto p-0 text-sm text-accent hover:bg-transparent hover:text-accent/80 cursor-pointer"
                   onClick={onViewAllReceipts}
                 >
                   View All
@@ -311,7 +311,7 @@ export function DashboardScreen({
                 </p>
                 <Button
                   onClick={onUploadReceipt}
-                  className="rounded-xl bg-accent text-accent-foreground hover:bg-accent/90"
+                  className="rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 cursor-pointer"
                 >
                   Choose File
                 </Button>

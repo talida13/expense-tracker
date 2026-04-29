@@ -23,19 +23,20 @@ export function useReceipts() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // const user = auth.currentUser;
-    // if (!user) {
-    //   setReceipts([]);
-    //   setLoading(false);
-    //   return;
-    // }
+    const user = auth.currentUser;
+    if (!user) {
+      setReceipts([]);
+      setLoading(false);
+      return;
+    }
 
-    const q = query(collection(db, "receipts"));
-    // 44afl @ will add after firebase auth: where("userId", "==", user.uid)
-
+    console.log("Current user UID:", user.uid);
+    const q = query(collection(db, "receipts"), where("userId", "==", user.uid));
+  
     const unsub = onSnapshot(
       q,
       (querySnapshot) => {
+        console.log("Receipts found:", querySnapshot.size);
         const receiptsData: ReceiptData[] = [];
         querySnapshot.forEach((doc) => {
           receiptsData.push({
