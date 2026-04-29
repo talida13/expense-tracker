@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -21,6 +22,8 @@ import {
   HelpCircle,
   ChevronRight,
 } from "lucide-react";
+import { useSettings } from "@/lib/useSettings";
+import { useAppSettings } from "@/lib/SettingsContext";
 import { LogoutButton } from "../LogoutButton";
 import { getAuth } from "firebase/auth";
 
@@ -35,8 +38,18 @@ export function SettingsScreen({
   isDarkMode,
   onToggleDarkMode,
 }: SettingsScreenProps) {
-  const [currency, setCurrency] = useState("USD");
+  const { settings, updateSettings, rates } = useAppSettings();
   const [notifications, setNotifications] = useState(true);
+
+  const currencyOptions = [
+    { value: "RON", symbol: "lei", rate: 1 },
+    { value: "USD", symbol: "$", rate: rates.USD || 0 },
+    { value: "EUR", symbol: "€", rate: rates.EUR || 0 },
+    { value: "GBP", symbol: "£", rate: rates.GBP || 0 },
+  ].map(({ value, symbol, rate }) => ({
+    value,
+    label: `${value} (${symbol}) - 1 ${value} = ${rate.toFixed(2)} RON (BNR Rate)`,
+  }));
   const auth = getAuth();
 
   const settingsSections = [
@@ -62,14 +75,9 @@ export function SettingsScreen({
           icon: DollarSign,
           label: "Currency",
           type: "select" as const,
-          value: currency,
-          onChange: setCurrency,
-          options: [
-            { value: "USD", label: "USD ($)" },
-            { value: "EUR", label: "EUR (€)" },
-            { value: "GBP", label: "GBP (£)" },
-            { value: "JPY", label: "JPY (¥)" },
-          ],
+          value: settings.currency,
+          onChange: (value: string) => updateSettings({ currency: value }),
+          options: currencyOptions,
         },
         {
           icon: Moon,
@@ -184,6 +192,15 @@ export function SettingsScreen({
                           ))}
                         </SelectContent>
                       </Select>
+                    )}
+
+                    {item.type === "input" && (
+                      <Input
+                        type="number"
+                        value={item.value}
+                        onChange={(e) => item.onChange(e.target.value)}
+                        className="h-10 w-28 rounded-xl border-0 bg-secondary"
+                      />
                     )}
                   </div>
                 ))}

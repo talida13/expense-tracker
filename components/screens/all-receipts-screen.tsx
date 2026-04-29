@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import type { Receipt } from "@/lib/types";
 import { CATEGORIES } from "@/lib/types";
+import { useAppSettings } from "@/lib/SettingsContext";
+import { formatCurrency } from "@/lib/utils";
 
 interface AllReceiptsScreenProps {
   receipts: Receipt[];
@@ -65,6 +67,7 @@ export function AllReceiptsScreen({
   onBack,
   onViewReceipt,
 }: AllReceiptsScreenProps) {
+  const { settings, rates } = useAppSettings();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
@@ -194,7 +197,7 @@ export function AllReceiptsScreen({
             {filteredReceipts.length !== 1 ? "s" : ""}
           </span>
           <span className="font-serif font-semibold text-foreground">
-            Total: ${totalFiltered.toFixed(2)}
+            Total: {formatCurrency(totalFiltered, settings.currency, rates)}
           </span>
         </div>
       </div>
@@ -246,7 +249,7 @@ export function AllReceiptsScreen({
                           {receipt.storeName}
                         </h4>
                         <p className="font-serif text-2xl font-bold tracking-tight text-foreground">
-                          ${receipt.total.toFixed(2)}
+                          {formatCurrency(receipt.total, settings.currency, rates)}
                         </p>
                       </div>
 
@@ -277,7 +280,7 @@ export function AllReceiptsScreen({
                                   {item.name}
                                 </span>
                                 <span className="ml-2 text-muted-foreground">
-                                  ${item.price.toFixed(2)}
+                                  {formatCurrency(item.price, settings.currency, rates)}
                                 </span>
                               </div>
                             ))}
@@ -329,7 +332,7 @@ export function AllReceiptsScreen({
                       </div>
                       <div className="text-right">
                         <p className="font-serif font-semibold text-foreground">
-                          ${receipt.total.toFixed(2)}
+                          {formatCurrency(receipt.total, settings.currency, rates)}
                         </p>
                         {receipt.items && receipt.items.length > 0 && (
                           <p className="text-xs text-muted-foreground">

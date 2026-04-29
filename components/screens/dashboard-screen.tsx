@@ -5,6 +5,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { useAppSettings } from "@/lib/SettingsContext";
+import { formatCurrency } from "@/lib/utils";
 import type { Receipt as ReceiptType } from "@/lib/types";
 import { getAuth } from "firebase/auth";
 import {
@@ -45,6 +47,7 @@ export function DashboardScreen({
   onViewReceipt,
   onOpenSettings,
 }: DashboardScreenProps) {
+  const { settings, rates } = useAppSettings();
   const totalSpent = receipts.reduce((sum, r) => sum + r.total, 0);
   const recentReceipts = receipts.slice(0, 4);
   const avgPerReceipt = receipts.length > 0 ? totalSpent / receipts.length : 0;
@@ -81,7 +84,7 @@ export function DashboardScreen({
               !
             </p>
             <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground lg:text-3xl">
-              Dashboard
+              Expense Tracker
             </h1>
           </div>
           <div className="flex items-center gap-3">
@@ -119,7 +122,7 @@ export function DashboardScreen({
                     This Month
                   </p>
                   <p className="font-serif text-2xl font-semibold tracking-tight text-primary-foreground">
-                    ${totalSpent.toFixed(2)}
+                    {formatCurrency(totalSpent, settings.currency, rates)}
                   </p>
                 </CardContent>
               </Card>
@@ -151,7 +154,7 @@ export function DashboardScreen({
                     Avg. per Receipt
                   </p>
                   <p className="font-serif text-2xl font-semibold tracking-tight text-foreground">
-                    ${avgPerReceipt.toFixed(2)}
+                    {formatCurrency(avgPerReceipt, settings.currency, rates)}
                   </p>
                 </CardContent>
               </Card>
@@ -201,7 +204,9 @@ export function DashboardScreen({
                         fill: "hsl(var(--muted-foreground))",
                         fontSize: 12,
                       }}
-                      tickFormatter={(value) => `$${value}`}
+                      tickFormatter={(value) =>
+                        formatCurrency(value, settings.currency, rates)
+                      }
                       className="hidden lg:block"
                       hide
                     />
@@ -235,7 +240,7 @@ export function DashboardScreen({
                             {category}
                           </span>
                           <span className="text-sm font-semibold text-foreground">
-                            ${amount.toFixed(2)}
+                            {formatCurrency(amount, settings.currency, rates)}
                           </span>
                         </div>
                         <div className="h-2 overflow-hidden rounded-full bg-secondary">
@@ -286,7 +291,7 @@ export function DashboardScreen({
                       </p>
                     </div>
                     <p className="font-semibold text-foreground">
-                      ${receipt.total.toFixed(2)}
+                      {formatCurrency(receipt.total, settings.currency, rates)}
                     </p>
                   </div>
                 ))}
